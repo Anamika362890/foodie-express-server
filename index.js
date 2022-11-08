@@ -24,8 +24,14 @@ async function run() {
         app.get('/foods', async (req, res) => {
             const query = {};
             const cursor = foodCollection.find(query);
-            const foods = await cursor.toArray();
+            const foods = await cursor.limit(3).toArray();
             res.send(foods);
+        })
+        app.get('/service', async (req, res) => {
+            const query = {};
+            const cursor = foodCollection.find(query);
+            const ServiceFoods = await cursor.toArray();
+            res.send(ServiceFoods);
         })
 
 

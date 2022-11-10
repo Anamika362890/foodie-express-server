@@ -44,6 +44,7 @@ async function run() {
 
         const foodCollection = client.db('foodieExpress').collection('foods');
         const foodDetailsCollection = client.db('foodieExpress').collection('foodDetails');
+        const ReviewCollection = client.db('foodieExpress').collection('Reviews');
 
 
         //jwt
@@ -55,6 +56,12 @@ async function run() {
 
 
         //data send to database
+
+        app.post('/review', async (req, res) => {
+            const review = req.body;
+            const result = await ReviewCollection.insertOne(review);
+            res.send(result);
+        })
         app.post('/foods', async (req, res) => {
             const foods = req.body;
 

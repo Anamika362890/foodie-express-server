@@ -23,6 +23,11 @@ async function run() {
 
 
         //data send to database
+        app.post('/foods', async (req, res) => {
+            const foods = req.body;
+            const result = await foodCollection.insertOne(foods);
+            res.send(result);
+        })
 
         app.post('/service', async (req, res) => {
             const foods = req.body;
@@ -32,13 +37,13 @@ async function run() {
 
         app.get('/foods', async (req, res) => {
             const query = {};
-            const cursor = foodCollection.find(query);
+            const cursor = foodCollection.find(query).sort({ _id: -1 });
             const foods = await cursor.limit(3).toArray();
             res.send(foods);
         })
         app.get('/service', async (req, res) => {
             const query = {};
-            const cursor = foodCollection.find(query);
+            const cursor = foodCollection.find(query).sort({ _id: -1 });
             const ServiceFoods = await cursor.toArray();
             res.send(ServiceFoods);
         })

@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+var jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const app = express();
@@ -15,6 +16,29 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@clu
 console.log(uri);
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+
+
+function verifyJWT(req, res, next) {
+    const authHeader = req.headers.authorization;
+    console.log(req.headers.authorization);
+
+    if (!authHeader) {
+        return res.status(403).send({ message: 'unauthorized access' });
+    }
+    const token = authHeader.split(' ')[1];
+
+
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+        if (err) {
+            return res.status(401).send({ message: 'Forbidden access' });
+        }
+        req.decoded = decoded;
+        next();
+    })
+}
+
+
+
 async function run() {
     try {
 
@@ -22,9 +46,18 @@ async function run() {
         const foodDetailsCollection = client.db('foodieExpress').collection('foodDetails');
 
 
+        //jwt
+        app.post('/jwt', (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+            res.send({ token });
+        })
+
+
         //data send to database
         app.post('/foods', async (req, res) => {
             const foods = req.body;
+
             const result = await foodCollection.insertOne(foods);
             res.send(result);
         })
@@ -56,8 +89,17 @@ async function run() {
         })
 
 
+        //
+        app.get('/foodDetails', verifyJWT, async (req, res) => {
+            const decoded = req.decoded;
+            console.log(decoded);
 
-        app.get('/foodDetails', async (req, res) => {
+            if (decoded.email !== req.query.email) {
+                res.status(403).send({ message: 'unauthorized access' })
+            }
+
+
+
             let query = {};
             if (req.query.email) {
                 query = {
